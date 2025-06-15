@@ -10,6 +10,7 @@ import com.mamta.customer.entity.Customer;
 import com.mamta.customer.exception.CustomerAlreadyExistsException;
 import com.mamta.customer.repository.CustomerRepository;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
@@ -19,6 +20,7 @@ import org.springframework.beans.BeanUtils;
 
 import java.util.Optional;
 
+@Slf4j
 @Aggregate
 @Data
 public class CustomerAggregate {
@@ -40,6 +42,7 @@ public class CustomerAggregate {
     @CommandHandler
     public CustomerAggregate(CreateCustomerCommand createCustomerCommand, CustomerRepository customerRepository) {
 
+
 //        In this we are processing command into event and send it to
          Optional<Customer> customerOptional = customerRepository.findByMobileNumberAndActiveSw(createCustomerCommand.getMobileNumber(),
                 createCustomerCommand.getActiveSw());
@@ -49,12 +52,13 @@ public class CustomerAggregate {
          }
         CustomerCreatedEvent customerCreatedEvent = new CustomerCreatedEvent();
          BeanUtils.copyProperties(createCustomerCommand, customerCreatedEvent);
-        AggregateLifecycle.apply(CustomerCreatedEvent.class); // send to event sourcing handler
+        AggregateLifecycle.apply(customerCreatedEvent); // send to event sourcing handler
 
     }
 
     @EventSourcingHandler
     public void on(CustomerCreatedEvent event) {
+        log.info("Customer created event: {}", event);
         // Using this events will be published to the event sourcing db in axon
         this.customerId = event.getCustomerId();
         this.name = event.getName();

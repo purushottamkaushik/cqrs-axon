@@ -7,6 +7,7 @@ import com.mamta.customer.dto.CustomerDto;
 import com.mamta.customer.dto.ResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping(path = "/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @Validated
@@ -28,13 +30,15 @@ public class CustomerCommandController {
     public ResponseEntity<ResponseDto> createCustomer(@Valid @RequestBody
                                                           CustomerDto customerDto) {
         CreateCustomerCommand createCustomerCommand = CreateCustomerCommand.builder()
+                .customerId(UUID.randomUUID().toString())
                 .name(customerDto.getName())
                 .email(customerDto.getEmail())
+                .mobileNumber(customerDto.getMobileNumber())
                 .activeSw(true)
                 .build();
 
-        customerDto.setCustomerId(UUID.randomUUID().toString());
-//        iCustomerService.createCustomer(customerDto);
+        log.info("Create customer inside command: {}", createCustomerCommand);
+
         commandGateway.sendAndWait(createCustomerCommand);
         return ResponseEntity
                 .status(org.springframework.http.HttpStatus.CREATED)
